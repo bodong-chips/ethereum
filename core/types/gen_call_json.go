@@ -16,7 +16,7 @@ var _ = (*callMarshaling)(nil)
 // MarshalJSON marshals as JSON.
 func (c Call) MarshalJSON() ([]byte, error) {
 	type Call struct {
-		Type        hexutil.Uint64 `json:"type" gencodec:"required"`
+		Type        hexutil.Uint   `json:"type" gencodec:"required"`
 		From        common.Address `json:"from" gencodec:"required"`
 		To          common.Address `json:"to" gencodec:"required"`
 		Gas         hexutil.Uint64 `json:"gas" gencodec:"required"`
@@ -31,7 +31,7 @@ func (c Call) MarshalJSON() ([]byte, error) {
 		Removed     bool           `json:"removed"`
 	}
 	var enc Call
-	enc.Type = hexutil.Uint64(c.Type)
+	enc.Type = hexutil.Uint(c.Type)
 	enc.From = c.From
 	enc.To = c.To
 	enc.Gas = hexutil.Uint64(c.Gas)
@@ -50,7 +50,7 @@ func (c Call) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals from JSON.
 func (c *Call) UnmarshalJSON(input []byte) error {
 	type Call struct {
-		Type        *hexutil.Uint64 `json:"type" gencodec:"required"`
+		Type        *hexutil.Uint   `json:"type" gencodec:"required"`
 		From        *common.Address `json:"from" gencodec:"required"`
 		To          *common.Address `json:"to" gencodec:"required"`
 		Gas         *hexutil.Uint64 `json:"gas" gencodec:"required"`
@@ -71,7 +71,7 @@ func (c *Call) UnmarshalJSON(input []byte) error {
 	if dec.Type == nil {
 		return errors.New("missing required field 'type' for Call")
 	}
-	c.Type = CallType(*dec.Type)
+	c.Type = uint8(*dec.Type)
 	if dec.From == nil {
 		return errors.New("missing required field 'from' for Call")
 	}

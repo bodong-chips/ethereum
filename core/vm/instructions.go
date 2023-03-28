@@ -17,10 +17,10 @@
 package vm
 
 import (
+	"github.com/ethereum/go-ethereum/core/types"
 	"sync/atomic"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/holiman/uint256"
@@ -613,19 +613,13 @@ func opCreate(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]b
 	scope.Stack.push(&stackvalue)
 	scope.Contract.Gas += returnGas
 
-	from := common.Address{}
-	to := common.Address{}
-	data := make([]byte, len(input))
-	copy(from[:], scope.Contract.Address().Bytes())
-	copy(to[:], addr[:])
-	copy(data, input)
 	interpreter.evm.StateDB.AddCall(&types.Call{
-		Type:    types.CREATE,
-		From:    from,
-		To:      to,
+		Type:    uint8(CREATE),
+		From:    scope.Contract.Address(),
+		To:      addr,
 		Gas:     gas - returnGas,
 		Value:   bigVal,
-		Data:    data,
+		Data:    common.CopyBytes(input),
 		Success: suberr == nil,
 	})
 
@@ -669,19 +663,13 @@ func opCreate2(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]
 	scope.Stack.push(&stackvalue)
 	scope.Contract.Gas += returnGas
 
-	from := common.Address{}
-	to := common.Address{}
-	data := make([]byte, len(input))
-	copy(from[:], scope.Contract.Address().Bytes())
-	copy(to[:], addr[:])
-	copy(data, input)
 	interpreter.evm.StateDB.AddCall(&types.Call{
-		Type:    types.CREATE2,
-		From:    from,
-		To:      to,
+		Type:    uint8(CREATE2),
+		From:    scope.Contract.Address(),
+		To:      addr,
 		Gas:     gas - returnGas,
 		Value:   bigEndowment,
-		Data:    data,
+		Data:    common.CopyBytes(input),
 		Success: suberr == nil,
 	})
 
@@ -725,26 +713,21 @@ func opCall(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byt
 		temp.SetOne()
 	}
 	stack.push(&temp)
+
+	interpreter.evm.StateDB.AddCall(&types.Call{
+		Type:    uint8(CALL),
+		From:    scope.Contract.Address(),
+		To:      toAddr,
+		Gas:     gas - returnGas,
+		Value:   bigVal,
+		Data:    common.CopyBytes(args),
+		Success: err == nil,
+	})
+
 	if err == nil || err == ErrExecutionReverted {
 		scope.Memory.Set(retOffset.Uint64(), retSize.Uint64(), ret)
 	}
 	scope.Contract.Gas += returnGas
-
-	from := common.Address{}
-	to := common.Address{}
-	data := make([]byte, len(args))
-	copy(from[:], scope.Contract.Address().Bytes())
-	copy(to[:], toAddr[:])
-	copy(data, args)
-	interpreter.evm.StateDB.AddCall(&types.Call{
-		Type:    types.CALL,
-		From:    from,
-		To:      to,
-		Gas:     gas - returnGas,
-		Value:   bigVal,
-		Data:    data,
-		Success: err == nil,
-	})
 
 	interpreter.returnData = ret
 	return ret, nil
@@ -776,26 +759,21 @@ func opCallCode(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([
 		temp.SetOne()
 	}
 	stack.push(&temp)
+
+	interpreter.evm.StateDB.AddCall(&types.Call{
+		Type:    uint8(CALLCODE),
+		From:    scope.Contract.Address(),
+		To:      toAddr,
+		Gas:     gas - returnGas,
+		Value:   bigVal,
+		Data:    common.CopyBytes(args),
+		Success: err == nil,
+	})
+
 	if err == nil || err == ErrExecutionReverted {
 		scope.Memory.Set(retOffset.Uint64(), retSize.Uint64(), ret)
 	}
 	scope.Contract.Gas += returnGas
-
-	from := common.Address{}
-	to := common.Address{}
-	data := make([]byte, len(args))
-	copy(from[:], scope.Contract.Address().Bytes())
-	copy(to[:], toAddr[:])
-	copy(data, args)
-	interpreter.evm.StateDB.AddCall(&types.Call{
-		Type:    types.CALLCODE,
-		From:    from,
-		To:      to,
-		Gas:     gas - returnGas,
-		Value:   bigVal,
-		Data:    data,
-		Success: err == nil,
-	})
 
 	interpreter.returnData = ret
 	return ret, nil
@@ -820,26 +798,21 @@ func opDelegateCall(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext
 		temp.SetOne()
 	}
 	stack.push(&temp)
+
+	interpreter.evm.StateDB.AddCall(&types.Call{
+		Type:    uint8(DELEGATECALL),
+		From:    scope.Contract.Address(),
+		To:      toAddr,
+		Gas:     gas - returnGas,
+		Value:   big0,
+		Data:    common.CopyBytes(args),
+		Success: err == nil,
+	})
+
 	if err == nil || err == ErrExecutionReverted {
 		scope.Memory.Set(retOffset.Uint64(), retSize.Uint64(), ret)
 	}
 	scope.Contract.Gas += returnGas
-
-	from := common.Address{}
-	to := common.Address{}
-	data := make([]byte, len(args))
-	copy(from[:], scope.Contract.Address().Bytes())
-	copy(to[:], toAddr[:])
-	copy(data, args)
-	interpreter.evm.StateDB.AddCall(&types.Call{
-		Type:    types.DELEGATECALL,
-		From:    from,
-		To:      to,
-		Gas:     gas - returnGas,
-		Value:   big0,
-		Data:    data,
-		Success: err == nil,
-	})
 
 	interpreter.returnData = ret
 	return ret, nil
@@ -864,26 +837,21 @@ func opStaticCall(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) 
 		temp.SetOne()
 	}
 	stack.push(&temp)
+
+	interpreter.evm.StateDB.AddCall(&types.Call{
+		Type:    uint8(STATICCALL),
+		From:    scope.Contract.Address(),
+		To:      toAddr,
+		Gas:     gas - returnGas,
+		Value:   big0,
+		Data:    common.CopyBytes(args),
+		Success: err == nil,
+	})
+
 	if err == nil || err == ErrExecutionReverted {
 		scope.Memory.Set(retOffset.Uint64(), retSize.Uint64(), ret)
 	}
 	scope.Contract.Gas += returnGas
-
-	from := common.Address{}
-	to := common.Address{}
-	data := make([]byte, len(args))
-	copy(from[:], scope.Contract.Address().Bytes())
-	copy(to[:], toAddr[:])
-	copy(data, args)
-	interpreter.evm.StateDB.AddCall(&types.Call{
-		Type:    types.STATICCALL,
-		From:    from,
-		To:      to,
-		Gas:     gas - returnGas,
-		Value:   big0,
-		Data:    data,
-		Success: err == nil,
-	})
 
 	interpreter.returnData = ret
 	return ret, nil
@@ -925,14 +893,10 @@ func opSelfdestruct(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext
 		interpreter.evm.Config.Tracer.CaptureExit([]byte{}, 0, nil)
 	}
 
-	from := common.Address{}
-	to := common.Address{}
-	copy(from[:], scope.Contract.Address().Bytes())
-	copy(to[:], common.Address(beneficiary.Bytes20()).Bytes())
 	interpreter.evm.StateDB.AddCall(&types.Call{
-		Type:    types.SELFDESTRUCT,
-		From:    from,
-		To:      to,
+		Type:    uint8(SELFDESTRUCT),
+		From:    scope.Contract.Address(),
+		To:      beneficiary.Bytes20(),
 		Gas:     0,
 		Value:   balance,
 		Data:    []byte{},

@@ -27,25 +27,8 @@ import (
 
 //go:generate go run github.com/fjl/gencodec -type Call -field-override callMarshaling -out gen_call_json.go
 
-type CallType byte
-
-// 0xf0 range - closures.
-const (
-	CREATE       CallType = 0xf0
-	CALL         CallType = 0xf1
-	CALLCODE     CallType = 0xf2
-	RETURN       CallType = 0xf3
-	DELEGATECALL CallType = 0xf4
-	CREATE2      CallType = 0xf5
-
-	STATICCALL   CallType = 0xfa
-	REVERT       CallType = 0xfd
-	INVALID      CallType = 0xfe
-	SELFDESTRUCT CallType = 0xff
-)
-
 type Call struct {
-	Type    CallType       `json:"type" gencodec:"required"`
+	Type    uint8          `json:"type" gencodec:"required"`
 	From    common.Address `json:"from" gencodec:"required"`
 	To      common.Address `json:"to" gencodec:"required"`
 	Gas     uint64         `json:"gas" gencodec:"required"`
@@ -62,7 +45,7 @@ type Call struct {
 }
 
 type callMarshaling struct {
-	Type  hexutil.Uint64
+	Type  hexutil.Uint
 	Gas   hexutil.Uint64
 	Value *hexutil.Big
 	Data  hexutil.Bytes
@@ -73,7 +56,7 @@ type callMarshaling struct {
 }
 
 type rlpCall struct {
-	Type    CallType
+	Type    uint8
 	From    common.Address
 	To      common.Address
 	Gas     uint64
