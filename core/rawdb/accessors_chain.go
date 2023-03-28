@@ -681,6 +681,7 @@ type storedReceiptRLP struct {
 	PostStateOrStatus []byte
 	CumulativeGasUsed uint64
 	Logs              []*types.Log
+	Calls             []*types.Call
 }
 
 // ReceiptLogs is a barebone version of ReceiptForStorage which only keeps
