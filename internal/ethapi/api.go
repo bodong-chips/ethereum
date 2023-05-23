@@ -1659,7 +1659,7 @@ func (s *TransactionAPI) GetTransactionReceipt(ctx context.Context, hash common.
 	} else {
 		fields["status"] = hexutil.Uint(receipt.Status)
 	}
-	fields["status"] = hexutil.Uint(receipt.Status)
+
 	if receipt.Logs == nil {
 		fields["logs"] = []*types.Log{}
 	}

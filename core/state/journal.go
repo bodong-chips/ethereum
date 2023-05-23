@@ -258,7 +258,7 @@ func (ch addCallChange) revert(s *StateDB) {
 	} else {
 		s.calls[ch.txhash] = calls[:len(calls)-1]
 	}
-	s.logSize--
+	s.callSize--
 }
 
 func (ch addCallChange) dirtied() *common.Address {
